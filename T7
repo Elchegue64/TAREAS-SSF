@@ -1,0 +1,183 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMmkZ2UPRaXkM3Iy80gdHfn",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Elchegue64/TAREAS-SSF/blob/T7/T7\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "nJa0FjUdbBKG",
+        "outputId": "6b15d40a-326c-4be6-d61b-72899f5bd324"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "a=1, M encontrado = 2\n",
+            "a=6, M encontrado = 4\n",
+            "a=10, M encontrado = 5\n",
+            "\n",
+            "RESULTADOS PROBLEMA (a)\n",
+            "\n",
+            "    a     h  M  Trapecio      Quad         Error\n",
+            "0   1  0.50  2  1.761237  1.772454  1.121658e-02\n",
+            "1   1  0.10  2  1.764041  1.772454  8.412970e-03\n",
+            "2   1  0.01  2  1.764162  1.772454  8.292290e-03\n",
+            "3   6  0.50  4  1.772454  1.772454  5.788678e-08\n",
+            "4   6  0.10  4  1.772454  1.772454  2.881251e-08\n",
+            "5   6  0.01  4  1.772454  1.772454  2.734134e-08\n",
+            "6  10  0.50  5  1.772454  1.772454  7.017276e-12\n",
+            "7  10  0.10  5  1.772454  1.772454  2.946310e-12\n",
+            "8  10  0.01  5  1.772454  1.772454  2.689404e-12\n",
+            "\n",
+            "RESULTADOS PROBLEMA (b)\n",
+            "\n",
+            "      n  Trapecio      Quad  Error\n",
+            "0   100       inf  1.290445    inf\n",
+            "1  1000       inf  1.290445    inf\n",
+            "2  5000       inf  1.290445    inf\n",
+            "\n",
+            "RESULTADOS PROBLEMA (c)\n",
+            "\n",
+            "      n  Trapecio      Quad         Error\n",
+            "0   100  0.460170  0.460232  6.207876e-05\n",
+            "1  1000  0.460231  0.460232  1.200208e-06\n",
+            "2  5000  0.460232  0.460232  7.684660e-08\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "/tmp/ipython-input-1804276276.py:51: RuntimeWarning: divide by zero encountered in divide\n",
+            "  return 1 / np.sqrt(x*(np.exp(x)+1))\n"
+          ]
+        }
+      ],
+      "source": [
+        "import numpy as np\n",
+        "import scipy.integrate as sci\n",
+        "import pandas as pd\n",
+        "\n",
+        "\n",
+        "# PROBLEMA (a)\n",
+        "\n",
+        "def f_a(x):\n",
+        "    return np.exp(-x**2)\n",
+        "\n",
+        "# Encontrar M tal que exp(-M^2) < 10^{-a}\n",
+        "def encontrar_M(a):\n",
+        "    M = 0\n",
+        "    while True:\n",
+        "        if np.exp(-M**2) < 10**(-a):\n",
+        "            return M\n",
+        "        M += 1\n",
+        "\n",
+        "# Regla del trapecio extendida en [-M, M]\n",
+        "def trapecio_extendido(f, h, M):\n",
+        "    xs = np.arange(-M, M+h, h)\n",
+        "    ys = f(xs)\n",
+        "    return h * (0.5*ys[0] + np.sum(ys[1:-1]) + 0.5*ys[-1])\n",
+        "\n",
+        "# Resolver problema (a)\n",
+        "A = [1, 6, 10]\n",
+        "H = [0.5, 0.1, 0.01]\n",
+        "\n",
+        "rows = []\n",
+        "\n",
+        "for a in A:\n",
+        "    M = encontrar_M(a)\n",
+        "    print(f\"a={a}, M encontrado = {M}\")\n",
+        "    for h in H:\n",
+        "        I_trap = trapecio_extendido(f_a, h, M)\n",
+        "        I_quad = sci.quad(f_a, -np.inf, np.inf)[0]\n",
+        "        err = abs(I_trap - I_quad)\n",
+        "        rows.append([a, h, M, I_trap, I_quad, err])\n",
+        "\n",
+        "df_a = pd.DataFrame(rows, columns=[\"a\",\"h\",\"M\",\"Trapecio\",\"Quad\",\"Error\"])\n",
+        "print(\"\\nRESULTADOS PROBLEMA (a)\\n\")\n",
+        "print(df_a)\n",
+        "\n",
+        "\n",
+        "\n",
+        "# PROBLEMA (b)\n",
+        "# I = ∫₀¹ dx / sqrt(x (e^x + 1))\n",
+        "\n",
+        "\n",
+        "def f_b(x):\n",
+        "    return 1 / np.sqrt(x*(np.exp(x)+1))\n",
+        "\n",
+        "# Trapecio simple en [0,1]\n",
+        "def trapecio(f, a, b, n):\n",
+        "    x = np.linspace(a, b, n+1)\n",
+        "    y = f(x)\n",
+        "    h = (b-a)/n\n",
+        "    return h*(0.5*y[0] + np.sum(y[1:-1]) + 0.5*y[-1])\n",
+        "\n",
+        "rows_b = []\n",
+        "Nvals = [100, 1000, 5000]\n",
+        "\n",
+        "for n in Nvals:\n",
+        "    I_trap = trapecio(f_b, 0, 1, n)\n",
+        "    I_quad = sci.quad(f_b, 0, 1)[0]\n",
+        "    err = abs(I_trap - I_quad)\n",
+        "    rows_b.append([n, I_trap, I_quad, err])\n",
+        "\n",
+        "df_b = pd.DataFrame(rows_b, columns=[\"n\",\"Trapecio\",\"Quad\",\"Error\"])\n",
+        "\n",
+        "print(\"\\nRESULTADOS PROBLEMA (b)\\n\")\n",
+        "print(df_b)\n",
+        "\n",
+        "\n",
+        "\n",
+        "# PROBLEMA (c)\n",
+        "# I = ∫₀¹ x^0.7 cos(x) dx\n",
+        "\n",
+        "\n",
+        "def f_c(x):\n",
+        "    return x**0.7 * np.cos(x)\n",
+        "\n",
+        "rows_c = []\n",
+        "\n",
+        "for n in Nvals:\n",
+        "    I_trap = trapecio(f_c, 0, 1, n)\n",
+        "    I_quad = sci.quad(f_c, 0, 1)[0]\n",
+        "    err = abs(I_trap - I_quad)\n",
+        "    rows_c.append([n, I_trap, I_quad, err])\n",
+        "\n",
+        "df_c = pd.DataFrame(rows_c, columns=[\"n\",\"Trapecio\",\"Quad\",\"Error\"])\n",
+        "\n",
+        "print(\"\\nRESULTADOS PROBLEMA (c)\\n\")\n",
+        "print(df_c)\n"
+      ]
+    }
+  ]
+}
